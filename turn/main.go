@@ -28,14 +28,14 @@ func main() {
 		log.Panic("REALM is a required environment variable")
 	}
 
-	udpPortStr := os.Getenv("UDP_PORT")
 
 	serverIP := os.Getenv("SERVERIP")
 	if serverIP == "" {
 		serverIP = "127.0.0.1"
 	}
 
-	//SERVERIP
+
+	udpPortStr := os.Getenv("UDP_PORT")
 	if udpPortStr == "" {
 		udpPortStr = "3478"
 	}
@@ -66,7 +66,7 @@ func main() {
 				},
 			},
 		},
-		LoggerFactory:      logging.NewDefaultLoggerFactory()
+		LoggerFactory:      logging.NewDefaultLoggerFactory(),
 	})
 
 	err = s.Start()
