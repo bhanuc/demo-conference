@@ -10,7 +10,7 @@ services:
   turn:
     build: ./turn
     environment:
-      - REALM=localhost
+      - REALM=leit.cc
     ports:
       - "3478:3478/udp"
     volumes:
