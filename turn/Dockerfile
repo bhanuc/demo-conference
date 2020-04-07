@@ -1,7 +1,7 @@
 FROM alpine:latest
 
 ENV GOPATH /usr/local
-ENV REALM leit.cc
+ENV REALM leit
 
 RUN apk --no-cache add go git musl-dev && rm -rf /var/cache/apk/*
 RUN go get -u -v github.com/cespare/reflex
