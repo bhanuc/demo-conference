@@ -14,7 +14,7 @@ import (
 )
 
 func createAuthHandler() turn.AuthHandler {
-	return func(username string, srcAddr net.Addr) (string, bool) {
+	return func(username string,  realm string, srcAddr net.Addr) (key []byte, ok bool) {
 		return "password", true
 	}
 }
@@ -29,6 +29,13 @@ func main() {
 	}
 
 	udpPortStr := os.Getenv("UDP_PORT")
+
+	serverIP := os.Getenv("SERVERIP")
+	if serverIP == "" {
+		serverIP = "127.0.0.1"
+	}
+
+	//SERVERIP
 	if udpPortStr == "" {
 		udpPortStr = "3478"
 	}
@@ -50,9 +57,16 @@ func main() {
 		Realm:              realm,
 		AuthHandler:        createAuthHandler(),
 		ChannelBindTimeout: channelBindTimeout,
-		ListeningPort:      udpPort,
-		LoggerFactory:      logging.NewDefaultLoggerFactory(),
-		Software:           os.Getenv("SOFTWARE"),
+		PacketConnConfigs: []PacketConnConfig{
+			{
+				PacketConn: udpListener,
+				RelayAddressGenerator: &RelayAddressGeneratorStatic{
+					RelayAddress: net.ParseIP(serverIP),
+					Address:      "0.0.0.0",
+				},
+			},
+		},
+		LoggerFactory:      logging.NewDefaultLoggerFactory()
 	})
 
 	err = s.Start()
