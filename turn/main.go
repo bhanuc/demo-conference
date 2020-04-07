@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"syscall"
 	"time"
-
+    "errors"
 	"github.com/pion/logging"
 	"github.com/pion/turn"
 )
@@ -18,6 +18,9 @@ func createAuthHandler() turn.AuthHandler {
 		return []byte("password"), true
 	}
 }
+
+var errConnUnset = errors.New("turn: PacketConnConfig must have a non-nil Conn")
+var errRelayAddressGeneratorUnset = errors.New("turn: RelayAddressGenerator in RelayConfig is unset")
 
 // RelayAddressGenerator is used to generate a RelayAddress when creating an allocation.
 // You can use one of the provided ones or provide your own.
@@ -96,7 +99,12 @@ func main() {
 		}
 	}
 
-	s := turn.NewServer(turn.ServerConfig{
+	udpListener, err := net.ListenPacket("udp4", serverIP+":"+strconv.Itoa(*port))
+	if err != nil {
+		log.Panicf("Failed to create TURN server listener: %s", err)
+	}
+
+	s, err := turn.NewServer(turn.ServerConfig{
 		Realm:              realm,
 		AuthHandler:        createAuthHandler(),
 		ChannelBindTimeout: channelBindTimeout,
