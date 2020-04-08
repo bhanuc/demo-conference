@@ -10,7 +10,7 @@ import (
 	"time"
     "errors"
 	"github.com/pion/logging"
-	"github.com/pion/turn"
+	"github.com/pion/turn/v2"
 )
 
 func createAuthHandler() turn.AuthHandler {
@@ -18,52 +18,6 @@ func createAuthHandler() turn.AuthHandler {
 		return []byte("password"), true
 	}
 }
-
-var errConnUnset = errors.New("turn: PacketConnConfig must have a non-nil Conn")
-var errRelayAddressGeneratorUnset = errors.New("turn: RelayAddressGenerator in RelayConfig is unset")
-
-// RelayAddressGenerator is used to generate a RelayAddress when creating an allocation.
-// You can use one of the provided ones or provide your own.
-type RelayAddressGenerator interface {
-	// Validate confirms that the RelayAddressGenerator is properly initialized
-	Validate() error
-
-	// Allocate a PacketConn (UDP) RelayAddress
-	AllocatePacketConn(network string, requestedPort int) (net.PacketConn, net.Addr, error)
-
-	// Allocate a Conn (TCP) RelayAddress
-	AllocateConn(network string, requestedPort int) (net.Conn, net.Addr, error)
-}
-
-type PacketConnConfig struct {
-	PacketConn net.PacketConn
-
-	// When an allocation is generated the RelayAddressGenerator
-	// creates the net.PacketConn and returns the IP/Port it is available at
-	RelayAddressGenerator RelayAddressGenerator
-}
-
-// ListenerConfig is a single net.Listener to accept connections on. This will be used for TCP, TLS and DTLS listeners
-type ListenerConfig struct {
-	Listener net.Listener
-
-	// When an allocation is generated the RelayAddressGenerator
-	// creates the net.PacketConn and returns the IP/Port it is available at
-	RelayAddressGenerator RelayAddressGenerator
-}
-
-func (c *ListenerConfig) validate() error {
-	if c.Listener == nil {
-		return errListenerUnset
-	}
-
-	if c.RelayAddressGenerator == nil {
-		return errRelayAddressGeneratorUnset
-	}
-
-	return c.RelayAddressGenerator.Validate()
-}
-
 
 func main() {
 	sigs := make(chan os.Signal, 1)
@@ -111,7 +65,7 @@ func main() {
 		PacketConnConfigs: []PacketConnConfig{
 			{
 				PacketConn: udpListener,
-				RelayAddressGenerator: &RelayAddressGeneratorStatic{
+				RelayAddressGenerator: &turn.RelayAddressGeneratorStatic{
 					RelayAddress: net.ParseIP(serverIP),
 					Address:      "0.0.0.0",
 				},
